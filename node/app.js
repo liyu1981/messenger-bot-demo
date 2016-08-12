@@ -47,6 +47,8 @@ const PAGE_ACCESS_TOKEN = (process.env.MESSENGER_PAGE_ACCESS_TOKEN) ?
   (process.env.MESSENGER_PAGE_ACCESS_TOKEN) :
   config.get('pageAccessToken');
 
+const WIT = config.get('wit');
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
   console.error("Missing config values");
   process.exit(1);
@@ -77,7 +79,6 @@ app.get('/source', function(req, res) {
     'sendGenericMessage': sendGenericMessage,
   };
   var fn = req.query['fname'];
-  console.log(module);
   if (fn in allsrc) {
     request({
       uri: 'http://hilite.me/api',
@@ -270,13 +271,55 @@ function receivedMessage(event) {
         break;
 
       default:
-        sendTextMessage(senderID,
-          'Hi, not quite understand what you mean, but I have following ' +
-          'options: image/button/generic/receipt or cat.');
+        sendQuickSelect(senderID);
+        //sendSource(senderID, sendQuickSelect);
+        //tryUnderstand(senderID, messageText);
     }
   } else if (messageAttachments) {
     sendTextMessage(senderID, "Message with attachment received, but I can not do anything to it currently. :(");
   }
+}
+
+function sendQuickSelect(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      "text": ('Hi, not quite understand what you mean, but I have following ' +
+               'options: image/button/generic/receipt or cat.'),
+      "quick_replies": [
+        { "content_type":"text", "title":"image", "payload":"image" },
+        { "content_type":"text", "title":"button", "payload":"button" },
+        { "content_type":"text", "title":"generic", "payload":"generic" },
+        { "content_type":"text", "title":"receipt", "payload":"receipt" },
+        { "content_type":"text", "title":"cat", "payload":"cat" }
+      ]
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function tryUnderstand(senderID, messageText) {
+  request({
+    uri: 'https://api.wit.ai/message',
+    header: {
+      'Authorization': 'Bearer ' + WIT.accessToken
+    },
+    qs: {
+      v: '20160526',
+      q: messageText
+    },
+    method: 'GET'
+  }, (error, resp, body) => {
+    console.log('wit returns:');
+    if (!error && resp.statusCode == 200) {
+      console.log(resp);
+    } else {
+      console.log(error, resp.body);
+    }
+  });
 }
 
 
@@ -582,7 +625,7 @@ function callSendAPI(messageData) {
 
 (function() {
   function _callSendAPI(messageData, callback) {
-    console.log('now send', JSON.stringify(messageData, null, 2));
+    //console.log('now send', JSON.stringify(messageData, null, 2));
     request({
       uri: 'https://graph.facebook.com/v2.6/me/messages',
       qs: { access_token: PAGE_ACCESS_TOKEN },
@@ -597,7 +640,7 @@ function callSendAPI(messageData) {
       } else {
         // TODO: retry?
         console.error("Unable to send message.");
-        console.error(response);
+        //console.error(response);
         console.error(error);
       }
       callback && callback();

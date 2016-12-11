@@ -25,6 +25,7 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(express.static('public'));
 
 var messageQueue = [];
+var oncall = null;
 
 /*
  * Be sure to setup your config values before running this code. You can
@@ -104,6 +105,29 @@ callSendAPI send HTTP POST request with following setting
   } else {
     res.status(200).send('Can not found source for ' + fn);
   }
+});
+
+app.get('/oncall', function(req, res) {
+  res.status(200).send(
+`<meta name="viewport" content="width=device-width, initial-scale=1">
+<form action="oncall_send">
+<h2>Leave your message here:</h2>
+<textarea rows="9" cols="40" name="msg"></textarea>
+<br />
+<input type="submit" value="submit"></input>
+</form>
+`);
+});
+
+app.get('/oncall_send', function(req, res) {
+  if (oncall) {
+    sendTextMessage(oncall, "Someone wants you! He said: " + req.query.msg);
+  }
+  res.status(200).send(
+`<meta name="viewport" content="width=device-width, initial-scale=1">
+<h2>Message is sent to oncall.</h2>
+You may close this page now.
+`);
 });
 
 
@@ -270,6 +294,14 @@ function receivedMessage(event) {
         sendSource(senderID, sendCatMessage);
         break;
 
+      case 'press 0':
+        sendOncallMessage(senderID);
+        break;
+
+      case 'takeoncall':
+        sendTakeoncallMessage(senderID);
+        break;
+
       default:
         sendQuickSelect(senderID);
         //sendSource(senderID, sendQuickSelect);
@@ -293,7 +325,8 @@ function sendQuickSelect(recipientId) {
         { "content_type":"text", "title":"button", "payload":"button" },
         { "content_type":"text", "title":"generic", "payload":"generic" },
         { "content_type":"text", "title":"receipt", "payload":"receipt" },
-        { "content_type":"text", "title":"cat", "payload":"cat" }
+        { "content_type":"text", "title":"cat", "payload":"cat" },
+        { "content_type":"text", "title":"press 0", "payload":"0"},
       ]
     }
   };
@@ -463,6 +496,36 @@ function sendTextMessage(recipientId, messageText) {
   };
 
   callSendAPI(messageData);
+}
+
+function sendOncallMessage(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "button",
+          text: "Oncall",
+          buttons:[{
+            type: "web_url",
+            url: "https://www.didi-ads.com/msgerbot/oncall",
+            title: "Leave message",
+            "webview_height_ratio": "compact"
+          }]
+        }
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendTakeoncallMessage(recipientId) {
+  oncall = recipientId;
+  sendTextMessage(recipientId, "Got it! Your are the oncall now!");
 }
 
 /*

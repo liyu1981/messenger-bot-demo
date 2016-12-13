@@ -108,11 +108,13 @@ callSendAPI send HTTP POST request with following setting
 });
 
 app.get('/oncall', function(req, res) {
+  var recipient = req.query.recipient;
   res.status(200).send(
 `<meta name="viewport" content="width=device-width, initial-scale=1">
 <form action="oncall_send">
 <h2>Leave your message here:</h2>
 <textarea rows="9" cols="40" name="msg"></textarea>
+<input type="hidden" name="recipient" value="${recipient}"></input>
 <br />
 <input type="submit" value="submit"></input>
 </form>
@@ -122,11 +124,39 @@ app.get('/oncall', function(req, res) {
 app.get('/oncall_send', function(req, res) {
   if (oncall) {
     sendTextMessage(oncall, "Someone wants you! He said: " + req.query.msg);
+    sendOncallReplyMessage(oncall, req.query.recipient);
   }
   res.status(200).send(
 `<meta name="viewport" content="width=device-width, initial-scale=1">
 <h2>Message is sent to oncall.</h2>
 You may close this page now.
+`);
+});
+
+app.get('/oncall_reply', function(req, res) {
+  var recipient = req.query.recipient;
+  console.log('recipient', recipient);
+  if (recipient) {
+    sendTextMessage(recipient, 'From Oncall: ' + req.query.msg);
+  }
+  res.status(200).send(
+`<meta name="viewport" content="width=device-width, initial-scale=1">
+<h2>Message is sent to client.</h2>
+You may close this page now.
+`);
+});
+
+app.get('/oncall_reply_form', function(req, res) {
+  var recipient = req.query.recipient;
+  res.status(200).send(
+`<meta name="viewport" content="width=device-width, initial-scale=1">
+<form action="oncall_reply">
+<h2>Reply to client with message here:</h2>
+<textarea rows="9" cols="40" name="msg"></textarea>
+<input type="hidden" name="recipient" value="${recipient}"></input>
+<br />
+<input type="submit" value="submit"></input>
+</form>
 `);
 });
 
@@ -152,7 +182,12 @@ app.post('/webhook', function (req, res) {
       // Iterate over each messaging event
       pageEntry.messaging.forEach(function(messagingEvent) {
         if (messagingEvent.optin) {
+          if (messagingEvent.sender) {
           receivedAuthentication(messagingEvent);
+          } else {
+            // from checkbox, https://developers.facebook.com/docs/messenger-platform/plugin-reference/checkbox-plugin
+            receivedCheckboxAuthentication(messagingEvent);
+          }
         } else if (messagingEvent.message) {
           receivedMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
@@ -230,6 +265,71 @@ function receivedAuthentication(event) {
   // When an authentication is received, we'll send a message back to the sender
   // to let them know it was successful.
   sendTextMessage(senderID, "Authentication successful");
+}
+
+function receivedCheckboxAuthentication(event) {
+  console.log(event);
+  var userref = event.optin['user_ref'];
+  var recipientID = event.recipient.id;
+  var timeOfAuth = event.timestamp;
+
+  // The 'ref' field is set in the 'Send to Messenger' plugin, in the 'data-ref'
+  // The developer can set this to an arbitrary value to associate the
+  // authentication callback with the 'Send to Messenger' click event. This is
+  // a way to do account linking when the user clicks the 'Send to Messenger'
+  // plugin.
+  var passThroughParam = event.optin.ref;
+
+  console.log("Received checkbox authentication for userref %s and page %d with pass " +
+    "through param '%s' at %d", userref, recipientID, passThroughParam,
+    timeOfAuth);
+
+  // When an authentication is received, we'll send a message back to the sender
+  // to let them know it was successful.
+  sendTextMessage(null, "Hi, got your order", userref);
+  sendConfirmOrderMessage(userref, passThroughParam);
+  sendOncallMessage(null, userref);
+}
+
+function sendConfirmOrderMessage(userref, params) {
+  // Generate a random receipt ID as the API requires a unique ID
+  var receiptId = "order" + Math.floor(Math.random()*1000);
+  var p = JSON.parse(params);
+
+  var messageData = {
+    recipient: {
+      user_ref: userref
+    },
+    message:{
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "receipt",
+          recipient_name: "Walkin customer",
+          order_number: receiptId,
+          currency: "USD",
+          payment_method: "Free",
+          timestamp: p.time,
+          elements: [],
+          summary: {
+            total_cost: p.total
+          }
+        }
+      }
+    }
+  };
+
+  p.cart.forEach(function(item) {
+    messageData.message.attachment.payload.elements.push({
+      title: item.title,
+      price: 0,
+      currency: "USD",
+      //'image_url': item.image_link
+    });
+  });
+  console.log('will confirm', messageData);
+
+  callSendAPI(messageData);
 }
 
 
@@ -485,10 +585,11 @@ function sendCatMessage(recipientId) {
  * Send a text message using the Send API.
  *
  */
-function sendTextMessage(recipientId, messageText) {
+function sendTextMessage(recipientId, messageText, userref) {
   var messageData = {
     recipient: {
-      id: recipientId
+      id: recipientId,
+      user_ref: userref
     },
     message: {
       text: messageText
@@ -498,10 +599,11 @@ function sendTextMessage(recipientId, messageText) {
   callSendAPI(messageData);
 }
 
-function sendOncallMessage(recipientId) {
+function sendOncallMessage(recipientId, userref) {
   var messageData = {
     recipient: {
-      id: recipientId
+      id: recipientId,
+      user_ref: userref
     },
     message: {
       attachment: {
@@ -511,8 +613,33 @@ function sendOncallMessage(recipientId) {
           text: "Oncall",
           buttons:[{
             type: "web_url",
-            url: "https://www.didi-ads.com/msgerbot/oncall",
+            url: "https://www.didi-ads.com/msgerbot/oncall?recipient=" + recipientId,
             title: "Leave message",
+            "webview_height_ratio": "compact"
+          }]
+        }
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendOncallReplyMessage(recipientId, clientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "button",
+          text: "Oncall Reply",
+          buttons:[{
+            type: "web_url",
+            url: "https://www.didi-ads.com/msgerbot/oncall_reply_form?recipient=" + clientId,
+            title: "Leave Reply",
             "webview_height_ratio": "compact"
           }]
         }

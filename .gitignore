@@ -4,5 +4,6 @@ pids
 node_modules
 .npm
 *.dat
+*.out
 
 node/config/default.json

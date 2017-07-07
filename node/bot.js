@@ -17,10 +17,6 @@ msger.init(app, web, msger, [
   require('./bot/order/msger.js'),
 ]);
 
-// Start msg reaper
-msger.reaper();
-msger.session.reaper();
-
 // Start server
 // Webhooks must be available via SSL with a certificate signed by a valid
 // certificate authority.

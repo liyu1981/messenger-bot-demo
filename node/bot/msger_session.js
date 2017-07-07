@@ -1,5 +1,7 @@
 var sessions = {};
 
+const TIMEOUT_20_MIN = 20*60*1000;
+
 export function reaper(timeout) {
   function _compress(sessions) {
     var nowtime = Math.floor(Date.now() / 1000);
@@ -19,11 +21,35 @@ export function reaper(timeout) {
       sessions = _compress(sessions);
     }
     setTimeout(_reap, _timeout);
-  };
+  }
 
   _reap();
-};
+}
 
 export function init(app, web, msger) {
 
+}
+
+export function find(key) {
+  return sessions[key];
+}
+
+export function reg(key, options) {
+  var nowtime = Math.floor(Date.now() / 1000);
+  sessions[key] = {
+    reg: nowtime,
+    timeout: (options && options.timeout) || TIMEOUT_20_MIN
+  };
+}
+
+export function update(key, changes) {
+  if (!find(key)) {
+    return;
+  }
+
+  Object.keys(changes).map(k => {
+    if (k in sessions[key]) {
+      sessions[key][k] = changes[k];
+    }
+  });
 }

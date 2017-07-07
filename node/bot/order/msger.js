@@ -1,3 +1,9 @@
+function extractPriceAndCurrency(item) {
+  var rawPrice = item.price;
+  var [rawPrice, rawCurrency] = rawPrice.replace(',', '.').split(' ');
+  return [parseFloat(rawPrice), rawCurrency];
+}
+
 function sendConfirmOrderMessage(msger, userref, params) {
   // Generate a random receipt ID as the API requires a unique ID
   var receiptId = "Order " + Math.floor(Math.random()*1000);
@@ -15,11 +21,22 @@ function sendConfirmOrderMessage(msger, userref, params) {
           recipient_name: "Walkin customer",
           order_number: receiptId,
           currency: "USD",
-          payment_method: "Free",
+          payment_method: "Free Visa 8888",
           timestamp: p.time,
           elements: [],
+          address:{
+            street_1: "King Street",
+            street_2: "",
+            city: "Sydney",
+            postal_code: "2000",
+            state: "NSW",
+            country: "AU",
+          },
           summary: {
-            total_cost: p.total
+            subtotal: p.total,
+            shipping_cost: 0,
+            total_tax: 0,
+            total_cost: p.total,
           }
         }
       }
@@ -27,14 +44,15 @@ function sendConfirmOrderMessage(msger, userref, params) {
   };
 
   p.cart.forEach(function(item) {
+    var [itemPrice, itemCurrency] = extractPriceAndCurrency(item);
     messageData.message.attachment.payload.elements.push({
       title: item.title,
-      price: 0,
-      currency: "USD",
-      //'image_url': item.image_link
+      quantity: 1,
+      price: itemPrice,
+      currency: itemCurrency,
+      "image_url": item.image_link
     });
   });
-  console.log('will confirm', messageData);
 
   msger.callSendAPI(messageData);
 }
@@ -65,6 +83,7 @@ function receivedCheckboxAuthentication(event, msger) {
 export function handle(messagingEvent, app, web, msger) {
   if (messagingEvent.optin && !messagingEvent.sender) {
     // from checkbox, https://developers.facebook.com/docs/messenger-platform/plugin-reference/checkbox-plugin
+    // console.log(messagingEvent);
     receivedCheckboxAuthentication(messagingEvent, msger);
     return true;
   }

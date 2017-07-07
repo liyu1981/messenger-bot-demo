@@ -85,13 +85,12 @@ function receivedDeliveryConfirmation(event) {
 
   if (messageIDs) {
     messageIDs.forEach(function(messageID) {
-      console.log("Received delivery confirmation for message ID: %s",
-        messageID);
+      console.log("Received delivery confirmation for message ID: %s", messageID);
     });
   }
 
   console.log("All message before %d were delivered.", watermark);
-};
+}
 
 /*
  * Postback Event
@@ -157,7 +156,7 @@ export function reaper(timeout) {
   };
 
   _reap();
-};
+}
 
 /*
  * Call the Send API. The message data goes in the body. If successful, we'll
@@ -167,7 +166,6 @@ export function reaper(timeout) {
 export function callSendAPI(messageData) {
   _app && _app.messageQueue.push(messageData);
 }
-
 
 export function sendQuickSelect(recipientId) {
   var messageData = {
@@ -193,10 +191,7 @@ export function sendQuickSelect(recipientId) {
 
 export function sendTextMessage(recipientId, messageText, userref) {
   var messageData = {
-    recipient: {
-      id: recipientId,
-      user_ref: userref
-    },
+    recipient: (recipientId ? { id: recipientId } : { user_ref: userref }),
     message: {
       text: messageText
     }
@@ -214,9 +209,9 @@ export function init(app, web, msger, plugins) {
   msger.session = require('./msger_session.js');
   msger.session.init(app, web, msger);
 
+  // setup www server to validate APP_SECRET
   web.www.use(bodyParser.json({ verify: genVerifyRequestSignature(app.APP_SECRET) }));
 
-  // msger bot token validation
   /*
    * Use your own validation token. Check that the token used in the Webhook
    * setup is the same token used here.
@@ -254,6 +249,11 @@ export function init(app, web, msger, plugins) {
         pageEntry.messaging.forEach(messagingEvent => {
           if (messagingEvent.message && messagingEvent.message.is_echo) {
             // echo message, we should skip
+            return;
+          }
+
+          if (messagingEvent.read && messagingEvent.read.watermark) {
+            // watermark msg, skip
             return;
           }
 
@@ -295,4 +295,8 @@ export function init(app, web, msger, plugins) {
   // finally if plugin has init, do init
   plugins.forEach(plugin => { plugin.init && plugin.init(app, web, msger); });
 
-};
+  // Start all reapers
+  msger.reaper();
+  msger.session.reaper();
+
+}

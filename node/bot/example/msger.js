@@ -37,7 +37,7 @@ function sendImageMessage(msger, recipientId) {
     }
   };
 
-  callSendAPI(messageData);
+  msger.callSendAPI(messageData);
 }
 
 function sendCatMessage(msger, recipientId) {
@@ -221,41 +221,38 @@ function receivedMessage(messagingEvent, app, web, msger) {
   var messageAttachments = message.attachments;
 
   if (messageText) {
-    // If we receive a text message, check to see if it matches any special
-    // keywords and send back the corresponding example. Otherwise, just echo
-    // the text we received.
     switch (messageText.toLowerCase().trim()) {
       case 'image':
         sendImageMessage(msger, senderID);
         sendSource(msger, senderID, sendImageMessage);
-        break;
+        return true;
 
       case 'button':
         sendButtonMessage(msger, senderID);
         sendSource(msger, senderID, sendButtonMessage);
-        break;
+        return true;
 
       case 'generic':
         sendGenericMessage(msger, senderID);
         sendSource(msger, senderID, sendGenericMessage);
-        break;
+        return true;
 
       case 'receipt':
         sendReceiptMessage(msger, senderID);
         sendSource(msger, senderID, sendGenericMessage);
-        break;
+        return true;
 
       case 'cat':
         sendCatMessage(msger, senderID);
         sendSource(msger, senderID, sendCatMessage);
-        break;
+        return true;
 
       //default:
       //  sendQuickSelect(senderID);
     }
-  } else if (messageAttachments) {
-    sendTextMessage(senderID, "Message with attachment received, but I can not do anything to it currently. :(");
   }
+
+  return false;
 }
 
 export function handle(messagingEvent, app, web, msger) {
@@ -264,4 +261,15 @@ export function handle(messagingEvent, app, web, msger) {
   }
 
   return receivedMessage(messagingEvent, app, web, msger);
-};
+}
+
+export function findSource(fname) {
+  var allsrc = {
+    //'sendTextMessage': sendTextMessage,
+    'sendCatMessage': sendCatMessage,
+    'sendImageMessage': sendImageMessage,
+    'sendButtonMessage': sendButtonMessage,
+    'sendGenericMessage': sendGenericMessage,
+  };
+  return allsrc[fname];
+}

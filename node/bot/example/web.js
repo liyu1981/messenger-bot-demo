@@ -1,24 +1,18 @@
 const
-  request = require('request')
+  request = require('request'),
+  example_msger = require('./msger.js')
   ;
 
 export function init(www, app) {
 
   www.get('/source', function(req, res) {
-    var allsrc = {
-      'sendTextMessage': sendTextMessage,
-      'sendCatMessage': sendCatMessage,
-      'sendImageMessage': sendImageMessage,
-      'sendButtonMessage': sendButtonMessage,
-      'sendGenericMessage': sendGenericMessage,
-    };
-    var fn = req.query['fname'];
-    if (fn in allsrc) {
+    var fn = example_msger.findSource(req.query['fname']);
+    if (fn) {
       request({
         uri: 'http://hilite.me/api',
         method: 'POST',
         formData: {
-          code: allsrc[fn].toString(),
+          code: fn.toString(),
           lexer: 'javascript'
         }
       }, function (error, response, body) {

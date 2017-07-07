@@ -15,9 +15,9 @@ export function init(www, app, msger) {
   });
 
   www.get('/oncall_send', function(req, res) {
-    if (oncall) {
-      msger.sendTextMessage(oncall, "Someone wants you! He said: " + req.query.msg);
-      msger.sendOncallReplyMessage(oncall, req.query.recipient);
+    if (app.oncall) {
+      msger.sendTextMessage(app.oncall, "Someone wants you! He said: " + req.query.msg);
+      msger.sendOncallReplyMessage(app.oncall, req.query.recipient);
     }
     res.status(200).send(
   `<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,5 +52,5 @@ export function init(www, app, msger) {
   </form>`
     );
   });
-  
+
 }

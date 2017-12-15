@@ -9,12 +9,14 @@ const
 web.init(app, web, msger, [
   require('./bot/example/web.js'),
   require('./bot/oncall/web.js'),
+  require('./bot/conversation/web.js'),
 ]);
 
 msger.init(app, web, msger, [
   require('./bot/example/msger.js'),
   require('./bot/oncall/msger.js'),
   require('./bot/order/msger.js'),
+  require('./bot/conversation/msger.js'),
 ]);
 
 // Start server

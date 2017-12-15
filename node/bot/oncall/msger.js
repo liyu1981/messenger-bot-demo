@@ -87,7 +87,7 @@ function receivedMessage(messagingEvent, app, web, msger) {
 export function init(app, web, msger) {
   app.oncall = null;
   msger.sendOncallReplyMessage = genSendOncallReplyMessage(msger);
-}
+};
 
 export function handle(messagingEvent, app, web, msger) {
   if (!messagingEvent.message) {

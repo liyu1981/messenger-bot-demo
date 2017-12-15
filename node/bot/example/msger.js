@@ -82,7 +82,7 @@ function sendButtonMessage(msger, recipientId) {
           text: "This is test text",
           buttons:[{
             type: "web_url",
-            url: "https://www.oculus.com/en-us/rift/",
+            url: "https://www.oculus.com/rift/",
             title: "Open Web URL"
           }, {
             type: "postback",
@@ -110,11 +110,11 @@ function sendGenericMessage(msger, recipientId) {
           elements: [{
             title: "rift",
             subtitle: "Next-generation virtual reality",
-            item_url: "https://www.oculus.com/en-us/rift/",
-            image_url: "http://messengerdemo.parseapp.com/img/rift.png",
+            item_url: "https://www.oculus.com/rift/",
+            image_url: "https://i.imgur.com/WjzjIMM.png",
             buttons: [{
               type: "web_url",
-              url: "https://www.oculus.com/en-us/rift/",
+              url: "https://www.oculus.com/rift/",
               title: "Open Web URL"
             }, {
               type: "postback",
@@ -122,13 +122,13 @@ function sendGenericMessage(msger, recipientId) {
               payload: "Payload for first bubble",
             }],
           }, {
-            title: "touch",
-            subtitle: "Your Hands, Now in VR",
-            item_url: "https://www.oculus.com/en-us/touch/",
-            image_url: "http://messengerdemo.parseapp.com/img/touch.png",
+            title: "Go",
+            subtitle: "Virtual reality, wherever you want to take it.",
+            item_url: "https://www.oculus.com/go/",
+            image_url: "https://i.imgur.com/mjHloAp.jpg",
             buttons: [{
               type: "web_url",
-              url: "https://www.oculus.com/en-us/touch/",
+              url: "https://www.oculus.com/go/",
               title: "Open Web URL"
             }, {
               type: "postback",
@@ -168,14 +168,14 @@ function sendReceiptMessage(msger, recipientId) {
             quantity: 1,
             price: 599.00,
             currency: "USD",
-            image_url: "http://messengerdemo.parseapp.com/img/riftsq.png"
+            image_url: "https://i.imgur.com/WjzjIMM.png"
           }, {
             title: "Samsung Gear VR",
             subtitle: "Frost White",
             quantity: 1,
             price: 99.99,
             currency: "USD",
-            image_url: "http://messengerdemo.parseapp.com/img/gearvrsq.png"
+            image_url: "https://i.imgur.com/i6tdM89.jpg"
           }],
           address: {
             street_1: "1 Hacker Way",
@@ -255,12 +255,63 @@ function receivedMessage(messagingEvent, app, web, msger) {
   return false;
 }
 
+function findIntent(intents, candidates) {
+  let final_intent = null;
+  intents.forEach(intent => {
+    if (candidates.includes(intent.value) && intent.confidence > 0.8) {
+      if (final_intent == null) {
+        final_intent = intent;
+      } else {
+        if (intent.confidence > final_intent.confidence) {
+          final_intent = intent;
+        }
+      }
+    }
+  });
+  return final_intent;
+}
+
 export function handle(messagingEvent, app, web, msger) {
   if (!messagingEvent.message) {
     return false;
   }
-
   return receivedMessage(messagingEvent, app, web, msger);
+}
+
+let supported_intents = {
+  'image example': (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'image';
+    return handle(messagingEvent, app, web, msger);
+  },
+  'cat example':  (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'cat';
+    return handle(messagingEvent, app, web, msger);
+  },
+  'button example':  (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'button';
+    return handle(messagingEvent, app, web, msger);
+  },
+  'generic example': (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'generic';
+    return handle(messagingEvent, app, web, msger);
+  },
+  'receipt example': (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'receipt';
+    return handle(messagingEvent, app, web, msger);
+  },
+  'example':  (messagingEvent, app, web, msger) => {
+    messagingEvent.message.text = 'generic';
+    return handle(messagingEvent, app, web, msger);
+  }
+}
+
+export function handleIntent(intents, messagingEvent, app, web, msger) {
+  let intent = findIntent(intents, Object.keys(supported_intents));
+  console.log('found high confident indent', intent);
+  if (intent) {
+    return supported_intents[intent.value](messagingEvent, app, web, msger);
+  }
+  return false;
 }
 
 export function findSource(fname) {

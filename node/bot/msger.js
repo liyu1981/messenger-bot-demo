@@ -4,7 +4,8 @@ const
   crypto = require('crypto'),
   express = require('express'),
   https = require('https'),
-  request = require('request')
+  request = require('request'),
+  witai = require('./witai')
   ;
 
 var _app = null;
@@ -122,7 +123,7 @@ function receivedPostback(event) {
 export function reaper(timeout) {
   function _callSendAPI(messageData, callback) {
     request({
-      uri: 'https://graph.facebook.com/v2.9/me/messages',
+      uri: 'https://graph.facebook.com/v2.11/me/messages',
       qs: { access_token: _app.PAGE_ACCESS_TOKEN },
       method: 'POST',
       json: messageData
@@ -269,7 +270,7 @@ export function init(app, web, msger, plugins) {
             return;
           }
 
-          var handled_count = 0;
+          let handled_count = 0;
           plugins.forEach(plugin => {
             if (plugin.handle(messagingEvent, app, web, msger)) {
               handled_count += 1;
@@ -278,7 +279,26 @@ export function init(app, web, msger, plugins) {
 
           if (handled_count == 0) {
             if (messagingEvent.message && messagingEvent.sender && messagingEvent.sender.id) {
-              sendQuickSelect(messagingEvent.sender.id);
+              witai.tryToGuessIntent(messagingEvent.message)
+                .then(
+                  // yes we have an intent, serve it
+                  (intents) => {
+                    console.log('wit gives us: ', intents);
+                    let handle_count = 0;
+                    plugins.forEach(plugin => {
+                      if (plugin.handleIntent(intents, messagingEvent, app, web, msger)) {
+                        handle_count += 1;
+                      }
+                    });
+                    if (handle_count == 0) {
+                      return Promise.reject('we can not handle intents:' + JSON.stringify(intents));
+                    }
+                  }
+                )
+                .catch((reason) => {
+                  console.log('intent handling error', reason);
+                  sendQuickSelect(messagingEvent.sender.id);
+                });
             }
             console.log("Webhook received unknown to handle messagingEvent: ", messagingEvent);
           }

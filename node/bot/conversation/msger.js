@@ -35,6 +35,9 @@ export function handle(messagingEvent, app, web, msger) {
   if (!messagingEvent.message) {
     return false;
   }
-
   return receivedMessage(messagingEvent, app, web, msger);
 };
+
+export function handleIntent(intents, messagingEvent, app, web, msger) {
+  return false;
+}

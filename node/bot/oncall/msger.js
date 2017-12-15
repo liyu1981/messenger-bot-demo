@@ -9,11 +9,11 @@ function genSendOncallReplyMessage(msger, recipientId, clientId) {
           type: "template",
           payload: {
             template_type: "button",
-            text: "Oncall Reply",
+            text: "Click below button to send reply to customer.",
             buttons:[{
               type: "web_url",
               url: "https://www.didi-ads.com/msgerbot/oncall_reply_form?recipient=" + clientId,
-              title: "Leave Reply",
+              title: "Input reply",
               "webview_height_ratio": "compact"
             }]
           }
@@ -35,7 +35,7 @@ function sendOncallMessage(msger, recipientId, userref) {
         type: "template",
         payload: {
           template_type: "button",
-          text: "Oncall",
+          text: "You have reached customer service, please click below button to leave us a message. We will get back to you ASAP.",
           buttons:[{
             type: "web_url",
             url: "https://www.didi-ads.com/msgerbot/oncall?recipient=" + recipientId,
@@ -93,6 +93,9 @@ export function handle(messagingEvent, app, web, msger) {
   if (!messagingEvent.message) {
     return false;
   }
-
   return receivedMessage(messagingEvent, app, web, msger);
 };
+
+export function handleIntent(intents, messagingEvent, app, web, msger) {
+  return false;
+}

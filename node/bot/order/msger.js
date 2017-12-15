@@ -89,3 +89,7 @@ export function handle(messagingEvent, app, web, msger) {
   }
   return false;
 };
+
+export function handleIntent(intents, messagingEvent, app, web, msger) {
+  return false;
+}

@@ -1,15 +1,15 @@
-function receivedMessage(messagingEvent, app, web, msger) {
-  var senderID = messagingEvent.sender.id;
-  var recipientID = messagingEvent.recipient.id;
-  var timeOfMessage = messagingEvent.timestamp;
+function receivedMessage(messagingEvent, _app, _web, _msger) {
+  //var senderID = messagingEvent.sender.id;
+  //var recipientID = messagingEvent.recipient.id;
+  //var timeOfMessage = messagingEvent.timestamp;
   var message = messagingEvent.message;
 
-  console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
-  console.log(JSON.stringify(message));
+  //console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
+  //console.log(JSON.stringify(message));
 
-  var messageId = message.mid;
+  //var _messageId = message.mid;
   var messageText = message.text;
-  var messageAttachments = message.attachments;
+  //var _messageAttachments = message.attachments;
 
   if (messageText) {
     switch (messageText.toLowerCase().trim()) {
@@ -28,16 +28,16 @@ function receivedMessage(messagingEvent, app, web, msger) {
   return false;
 }
 
-export function init(app, web, msger) {
-};
+export function init(_app, _web, _msger) {
+}
 
 export function handle(messagingEvent, app, web, msger) {
   if (!messagingEvent.message) {
     return false;
   }
   return receivedMessage(messagingEvent, app, web, msger);
-};
+}
 
-export function handleIntent(intents, messagingEvent, app, web, msger) {
+export function handleIntent(_intents, _messagingEvent, _app, _web, _msger) {
   return false;
 }

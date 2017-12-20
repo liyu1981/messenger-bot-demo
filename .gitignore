@@ -7,3 +7,5 @@ node_modules
 *.out
 
 node/config/default.json
+node/bundle/*
+node/var/*

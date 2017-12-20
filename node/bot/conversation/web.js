@@ -1,2 +1,2 @@
-export function init(www, app, msger) {
-};
+export function init(_www, _app, _msger) {
+}

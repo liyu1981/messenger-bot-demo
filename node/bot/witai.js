@@ -1,7 +1,6 @@
-const
-  config = require('config'),
-  request = require('request')
-  ;
+import config from 'config';
+import request from 'request';
+import logger from './log';
 
 function prepareWitAiRequest(message) {
   let witToken = config.get('witToken');
@@ -17,13 +16,13 @@ function prepareWitAiRequest(message) {
   };
 }
 
-export function tryToGuessIntent(message, handle, fallback) {
+export function tryToGuessIntent(message) {
   return new Promise((resolve, reject) => {
     request(
       prepareWitAiRequest(message),
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
-          console.log('wit return:', body);
+          logger.info(`wit return: ${JSON.stringify(body)}`);
           let {entities: {message_subject: sq}} = JSON.parse(body);
           if (sq && sq.length > 0) {
             resolve(sq);
@@ -31,11 +30,10 @@ export function tryToGuessIntent(message, handle, fallback) {
             reject('Wit retrun no message_subject.');
           }
         } else {
-          console.error("Wit error.");
-          console.error(error);
+          logger.error(`Wit error: ${JSON.stringify(error)}`);
           reject('Wit returned error.');
         }
       }
     );
   });
-};
+}

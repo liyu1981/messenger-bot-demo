@@ -1,12 +1,14 @@
+import logger from '../log';
+
 function extractPriceAndCurrency(item) {
-  var rawPrice = item.price;
-  var [rawPrice, rawCurrency] = rawPrice.replace(',', '.').split(' ');
+  var item_raw_price = item.price;
+  var [rawPrice, rawCurrency] = item_raw_price.replace(',', '.').split(' ');
   return [parseFloat(rawPrice), rawCurrency];
 }
 
 function sendConfirmOrderMessage(msger, userref, params) {
   // Generate a random receipt ID as the API requires a unique ID
-  var receiptId = "Order " + Math.floor(Math.random()*1000);
+  var receiptId = 'Order ' + Math.floor(Math.random()*1000);
   var p = JSON.parse(params);
 
   var messageData = {
@@ -15,22 +17,22 @@ function sendConfirmOrderMessage(msger, userref, params) {
     },
     message:{
       attachment: {
-        type: "template",
+        type: 'template',
         payload: {
-          template_type: "receipt",
-          recipient_name: "Walkin customer",
+          template_type: 'receipt',
+          recipient_name: 'Walkin customer',
           order_number: receiptId,
-          currency: "USD",
-          payment_method: "Free Visa 8888",
+          currency: 'USD',
+          payment_method: 'Free Visa 8888',
           timestamp: p.time,
           elements: [],
           address:{
-            street_1: "King Street",
-            street_2: "",
-            city: "Sydney",
-            postal_code: "2000",
-            state: "NSW",
-            country: "AU",
+            street_1: 'King Street',
+            street_2: '',
+            city: 'Sydney',
+            postal_code: '2000',
+            state: 'NSW',
+            country: 'AU',
           },
           summary: {
             subtotal: p.total,
@@ -50,7 +52,7 @@ function sendConfirmOrderMessage(msger, userref, params) {
       quantity: 1,
       price: itemPrice,
       currency: itemCurrency,
-      "image_url": item.image_link
+      'image_url': item.image_link
     });
   });
 
@@ -69,13 +71,14 @@ function receivedCheckboxAuthentication(event, msger) {
   // plugin.
   var passThroughParam = event.optin.ref;
 
-  console.log("Received checkbox authentication for userref %s and page %d with pass " +
-    "through param '%s' at %d", userref, recipientID, passThroughParam,
-    timeOfAuth);
+  logger.info(
+    `Received checkbox authentication for userref ${userref} and page ${recipientID} with pass ` +
+    `through param '${passThroughParam}' at ${timeOfAuth}`
+  );
 
   // When an authentication is received, we'll send a message back to the sender
   // to let them know it was successful.
-  msger.sendTextMessage(null, "Hi, got your order", userref);
+  msger.sendTextMessage(null, 'Hi, got your order', userref);
   sendConfirmOrderMessage(msger, userref, passThroughParam);
   //msger.sendOncallMessage(null, userref);
 }
@@ -88,8 +91,8 @@ export function handle(messagingEvent, app, web, msger) {
     return true;
   }
   return false;
-};
+}
 
-export function handleIntent(intents, messagingEvent, app, web, msger) {
+export function handleIntent(_intents, _messagingEvent, _app, _web, _msger) {
   return false;
 }

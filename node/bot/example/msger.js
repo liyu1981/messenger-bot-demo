@@ -1,3 +1,5 @@
+import logger from '../log';
+
 function sendSource(msger, recipientId, sourcefn) {
   var fname = sourcefn.name;
   var messageData = {
@@ -6,13 +8,13 @@ function sendSource(msger, recipientId, sourcefn) {
     },
     message: {
       attachment: {
-        type: "template",
+        type: 'template',
         payload: {
-          template_type: "button",
-          text: "Click to see source code",
+          template_type: 'button',
+          text: 'Click to see source code',
           buttons:[{
-            type: "web_url",
-            url: "https://www.didi-ads.com/msgerbot/source?fname=" + fname,
+            type: 'web_url',
+            url: 'https://www.didi-ads.com/msgerbot/source?fname=' + fname,
             title: fname
           }]
         }
@@ -29,9 +31,9 @@ function sendImageMessage(msger, recipientId) {
     },
     message: {
       attachment: {
-        type: "image",
+        type: 'image',
         payload: {
-          url: "http://i.imgur.com/zYIlgBl.png"
+          url: 'http://i.imgur.com/zYIlgBl.png'
         }
       }
     }
@@ -50,9 +52,9 @@ function sendCatMessage(msger, recipientId) {
     },
     message: {
       attachment: {
-        type: "image",
+        type: 'image',
         payload: {
-          url: "http://www.thecatapi.com/api/images/get"
+          url: 'http://www.thecatapi.com/api/images/get'
         }
       }
     }
@@ -76,18 +78,18 @@ function sendButtonMessage(msger, recipientId) {
     },
     message: {
       attachment: {
-        type: "template",
+        type: 'template',
         payload: {
-          template_type: "button",
-          text: "This is test text",
+          template_type: 'button',
+          text: 'This is test text',
           buttons:[{
-            type: "web_url",
-            url: "https://www.oculus.com/rift/",
-            title: "Open Web URL"
+            type: 'web_url',
+            url: 'https://www.oculus.com/rift/',
+            title: 'Open Web URL'
           }, {
-            type: "postback",
-            title: "Call Postback",
-            payload: "Developer defined postback"
+            type: 'postback',
+            title: 'Call Postback',
+            payload: 'Developer defined postback'
           }]
         }
       }
@@ -104,36 +106,36 @@ function sendGenericMessage(msger, recipientId) {
     },
     message: {
       attachment: {
-        type: "template",
+        type: 'template',
         payload: {
-          template_type: "generic",
+          template_type: 'generic',
           elements: [{
-            title: "rift",
-            subtitle: "Next-generation virtual reality",
-            item_url: "https://www.oculus.com/rift/",
-            image_url: "https://i.imgur.com/WjzjIMM.png",
+            title: 'rift',
+            subtitle: 'Next-generation virtual reality',
+            item_url: 'https://www.oculus.com/rift/',
+            image_url: 'https://i.imgur.com/WjzjIMM.png',
             buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/rift/",
-              title: "Open Web URL"
+              type: 'web_url',
+              url: 'https://www.oculus.com/rift/',
+              title: 'Open Web URL'
             }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for first bubble",
+              type: 'postback',
+              title: 'Call Postback',
+              payload: 'Payload for first bubble',
             }],
           }, {
-            title: "Go",
-            subtitle: "Virtual reality, wherever you want to take it.",
-            item_url: "https://www.oculus.com/go/",
-            image_url: "https://i.imgur.com/mjHloAp.jpg",
+            title: 'Go',
+            subtitle: 'Virtual reality, wherever you want to take it.',
+            item_url: 'https://www.oculus.com/go/',
+            image_url: 'https://i.imgur.com/mjHloAp.jpg',
             buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/go/",
-              title: "Open Web URL"
+              type: 'web_url',
+              url: 'https://www.oculus.com/go/',
+              title: 'Open Web URL'
             }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for second bubble",
+              type: 'postback',
+              title: 'Call Postback',
+              payload: 'Payload for second bubble',
             }]
           }]
         }
@@ -146,7 +148,7 @@ function sendGenericMessage(msger, recipientId) {
 
 function sendReceiptMessage(msger, recipientId) {
   // Generate a random receipt ID as the API requires a unique ID
-  var receiptId = "order" + Math.floor(Math.random()*1000);
+  var receiptId = 'order' + Math.floor(Math.random()*1000);
 
   var messageData = {
     recipient: {
@@ -154,36 +156,36 @@ function sendReceiptMessage(msger, recipientId) {
     },
     message:{
       attachment: {
-        type: "template",
+        type: 'template',
         payload: {
-          template_type: "receipt",
-          recipient_name: "Peter Chang",
+          template_type: 'receipt',
+          recipient_name: 'Peter Chang',
           order_number: receiptId,
-          currency: "USD",
-          payment_method: "Visa 1234",
-          timestamp: "1428444852",
+          currency: 'USD',
+          payment_method: 'Visa 1234',
+          timestamp: '1428444852',
           elements: [{
-            title: "Oculus Rift",
-            subtitle: "Includes: headset, sensor, remote",
+            title: 'Oculus Rift',
+            subtitle: 'Includes: headset, sensor, remote',
             quantity: 1,
             price: 599.00,
-            currency: "USD",
-            image_url: "https://i.imgur.com/WjzjIMM.png"
+            currency: 'USD',
+            image_url: 'https://i.imgur.com/WjzjIMM.png'
           }, {
-            title: "Samsung Gear VR",
-            subtitle: "Frost White",
+            title: 'Samsung Gear VR',
+            subtitle: 'Frost White',
             quantity: 1,
             price: 99.99,
-            currency: "USD",
-            image_url: "https://i.imgur.com/i6tdM89.jpg"
+            currency: 'USD',
+            image_url: 'https://i.imgur.com/i6tdM89.jpg'
           }],
           address: {
-            street_1: "1 Hacker Way",
-            street_2: "",
-            city: "Menlo Park",
-            postal_code: "94025",
-            state: "CA",
-            country: "US"
+            street_1: '1 Hacker Way',
+            street_2: '',
+            city: 'Menlo Park',
+            postal_code: '94025',
+            state: 'CA',
+            country: 'US'
           },
           summary: {
             subtotal: 698.99,
@@ -192,10 +194,10 @@ function sendReceiptMessage(msger, recipientId) {
             total_cost: 626.66
           },
           adjustments: [{
-            name: "New Customer Discount",
+            name: 'New Customer Discount',
             amount: -50
           }, {
-            name: "$100 Off Coupon",
+            name: '$100 Off Coupon',
             amount: -100
           }]
         }
@@ -212,13 +214,15 @@ function receivedMessage(messagingEvent, app, web, msger) {
   var timeOfMessage = messagingEvent.timestamp;
   var message = messagingEvent.message;
 
-  console.log("Received message for user %d and page %d at %d with message:", senderID, recipientID, timeOfMessage);
-  console.log(JSON.stringify(message));
+  logger.info(
+    `Received message for user ${senderID} and page ${recipientID} at ${timeOfMessage}` +
+    ` with message: ${JSON.stringify(message)}`
+  );
 
-  var messageId = message.mid;
+  //var messageId = message.mid;
   // You may get a text or attachment but not both
   var messageText = message.text;
-  var messageAttachments = message.attachments;
+  //var messageAttachments = message.attachments;
 
   if (messageText) {
     switch (messageText.toLowerCase().trim()) {
@@ -303,11 +307,11 @@ let supported_intents = {
     messagingEvent.message.text = 'generic';
     return handle(messagingEvent, app, web, msger);
   }
-}
+};
 
 export function handleIntent(intents, messagingEvent, app, web, msger) {
   let intent = findIntent(intents, Object.keys(supported_intents));
-  console.log('found high confident indent', intent);
+  logger.info(`found high confident indent: ${JSON.stringify(intent)}`);
   if (intent) {
     return supported_intents[intent.value](messagingEvent, app, web, msger);
   }

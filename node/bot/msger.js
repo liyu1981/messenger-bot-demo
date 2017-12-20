@@ -1,14 +1,10 @@
-const
-  bodyParser = require('body-parser'),
-  config = require('config'),
-  crypto = require('crypto'),
-  express = require('express'),
-  https = require('https'),
-  request = require('request'),
-  witai = require('./witai')
-  ;
+import bodyParser from 'body-parser';
+import crypto from 'crypto';
+import request from 'request';
+import * as witai from './witai';
+import logger from './log';
 
-var _app = null;
+let _app = null;
 
 /*
  * Verify that the callback came from Facebook. Using the App Secret from
@@ -20,21 +16,21 @@ var _app = null;
  */
 function genVerifyRequestSignature(appSecret) {
   return (req, res, buf) => {
-    var signature = req.headers["x-hub-signature"];
+    let signature = req.headers['x-hub-signature'];
 
     if (!signature) {
-      // For testing, let's log an error. In production, you should throw an
-      // error.
-      console.error("Couldn't validate the signature.");
+      // For testing, let's log an error. In production, you should throw an error.
+      logger.error('Could not validate the signature.');
     } else {
-      var elements = signature.split('=');
-      var method = elements[0];
-      var signatureHash = elements[1];
-      var expectedHash = crypto.createHmac('sha1', appSecret)
-                               .update(buf)
-                               .digest('hex');
+      logger.info(`signature is ${signature}`);
+      let elements = signature.split('=');
+      //let method = elements[0];
+      let signatureHash = elements[1];
+      let expectedHash = crypto.createHmac('sha1', appSecret.toString())
+        .update(buf)
+        .digest('hex');
       if (signatureHash != expectedHash) {
-        throw new Error("Couldn't validate the request signature.");
+        throw new Error('Could not validate the request signature.');
       }
     }
   };
@@ -49,24 +45,25 @@ function genVerifyRequestSignature(appSecret) {
  *
  */
 function receivedAuthentication(event) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var timeOfAuth = event.timestamp;
+  let senderID = event.sender.id;
+  let recipientID = event.recipient.id;
+  let timeOfAuth = event.timestamp;
 
   // The 'ref' field is set in the 'Send to Messenger' plugin, in the 'data-ref'
   // The developer can set this to an arbitrary value to associate the
   // authentication callback with the 'Send to Messenger' click event. This is
   // a way to do account linking when the user clicks the 'Send to Messenger'
   // plugin.
-  var passThroughParam = event.optin.ref;
+  let passThroughParam = event.optin.ref;
 
-  console.log("Received authentication for user %d and page %d with pass " +
-    "through param '%s' at %d", senderID, recipientID, passThroughParam,
-    timeOfAuth);
+  logger.info(
+    `Received authentication for user ${senderID} and page ${recipientID}` +
+    ` with pass through param '${passThroughParam}' at ${timeOfAuth}`
+  );
 
   // When an authentication is received, we'll send a message back to the sender
   // to let them know it was successful.
-  sendTextMessage(senderID, "Authentication successful");
+  sendTextMessage(senderID, 'Authentication successful');
 }
 
 /*
@@ -77,20 +74,20 @@ function receivedAuthentication(event) {
  *
  */
 function receivedDeliveryConfirmation(event) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var delivery = event.delivery;
-  var messageIDs = delivery.mids;
-  var watermark = delivery.watermark;
-  var sequenceNumber = delivery.seq;
+  //let senderID = event.sender.id;
+  //let recipientID = event.recipient.id;
+  let delivery = event.delivery;
+  let messageIDs = delivery.mids;
+  let watermark = delivery.watermark;
+  //let sequenceNumber = delivery.seq;
 
   if (messageIDs) {
     messageIDs.forEach(function(messageID) {
-      console.log("Received delivery confirmation for message ID: %s", messageID);
+      logger.info(`Received delivery confirmation for message ID: ${messageID}`);
     });
   }
 
-  console.log("All message before %d were delivered.", watermark);
+  logger.info(`All message before ${watermark} were delivered.`);
 }
 
 /*
@@ -101,20 +98,21 @@ function receivedDeliveryConfirmation(event) {
  *
  */
 function receivedPostback(event) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var timeOfPostback = event.timestamp;
+  let senderID = event.sender.id;
+  let recipientID = event.recipient.id;
+  let timeOfPostback = event.timestamp;
 
   // The 'payload' param is a developer-defined field which is set in a postback
   // button for Structured Messages.
-  var payload = event.postback.payload;
+  let payload = event.postback.payload;
 
-  console.log("Received postback for user %d and page %d with payload '%s' " +
-    "at %d", senderID, recipientID, payload, timeOfPostback);
+  logger.info(
+    `Received postback for user ${senderID} and page ${recipientID} with payload '${payload}' at ${timeOfPostback}`
+  );
 
   // When a postback is called, we'll send a message back to the sender to
   // let them know it was successful
-  sendTextMessage(senderID, "Postback called");
+  sendTextMessage(senderID, 'Postback called');
 }
 
 // public interfaces
@@ -129,32 +127,33 @@ export function reaper(timeout) {
       json: messageData
     }, function(error, response, body) {
       if (!error && response.statusCode == 200) {
-        var recipientId = body.recipient_id;
-        var messageId = body.message_id;
-        console.log("Successfully sent generic message with id %s to recipient %s",
-          messageId, recipientId);
+        let recipientID = body.recipient_id;
+        let messageID = body.message_id;
+        logger.info(`Successfully sent generic message with id ${messageID} to recipient ${recipientID}`);
       } else {
         // TODO: retry?
-        console.error("Unable to send message.");
-        console.error(response.statusCode, messageData);
-        console.error(error);
+        logger.error('Unable to send message.', {
+          statusCode: response.statusCode,
+          messageData: messageData,
+          error: error,
+        });
       }
       callback && callback();
     });
   }
 
-  var _timeout = timeout || 500;
+  let _timeout = timeout || 500;
 
   function _reap() {
     if (_app && _app.messageQueue && _app.messageQueue.length > 0) {
-      var md = _app.messageQueue.shift();
+      let md = _app.messageQueue.shift();
       _callSendAPI(md, function() {
         _reap();
       });
     } else {
       setTimeout(_reap, _timeout);
     }
-  };
+  }
 
   _reap();
 }
@@ -169,20 +168,20 @@ export function callSendAPI(messageData) {
 }
 
 export function sendQuickSelect(recipientId) {
-  var messageData = {
+  let messageData = {
     recipient: {
       id: recipientId
     },
     message: {
-      "text": ('Hi, not quite understand what you mean, but I have following ' +
+      'text': ('Hi, not quite understand what you mean, but I have following ' +
                'options: image/button/generic/receipt or cat.'),
-      "quick_replies": [
-        { "content_type":"text", "title":"image", "payload":"image" },
-        { "content_type":"text", "title":"button", "payload":"button" },
-        { "content_type":"text", "title":"generic", "payload":"generic" },
-        { "content_type":"text", "title":"receipt", "payload":"receipt" },
-        { "content_type":"text", "title":"cat", "payload":"cat" },
-        { "content_type":"text", "title":"press 0", "payload":"0"},
+      'quick_replies': [
+        { 'content_type':'text', 'title':'image', 'payload':'image' },
+        { 'content_type':'text', 'title':'button', 'payload':'button' },
+        { 'content_type':'text', 'title':'generic', 'payload':'generic' },
+        { 'content_type':'text', 'title':'receipt', 'payload':'receipt' },
+        { 'content_type':'text', 'title':'cat', 'payload':'cat' },
+        { 'content_type':'text', 'title':'press 0', 'payload':'0'},
       ]
     }
   };
@@ -191,7 +190,7 @@ export function sendQuickSelect(recipientId) {
 }
 
 export function sendTextMessage(recipientId, messageText, userref) {
-  var messageData = {
+  let messageData = {
     recipient: (recipientId ? { id: recipientId } : { user_ref: userref }),
     message: {
       text: messageText
@@ -211,6 +210,7 @@ export function init(app, web, msger, plugins) {
   msger.session.init(app, web, msger);
 
   // setup www server to validate APP_SECRET
+  logger.info(`app secret is ${app.APP_SECRET}`);
   web.www.use(bodyParser.json({ verify: genVerifyRequestSignature(app.APP_SECRET) }));
 
   /*
@@ -220,10 +220,10 @@ export function init(app, web, msger, plugins) {
   web.www.get('/webhook', function(req, res) {
     if (req.query['hub.mode'] === 'subscribe' &&
         req.query['hub.verify_token'] === app.VALIDATION_TOKEN) {
-      console.log("Validating webhook");
+      logger.info('Validating webhook');
       res.status(200).send(req.query['hub.challenge']);
     } else {
-      console.error("Failed validation. Make sure the validation tokens match.");
+      logger.error('Failed validation. Make sure the validation tokens match.');
       res.sendStatus(403);
     }
   });
@@ -236,15 +236,15 @@ export function init(app, web, msger, plugins) {
    *
    */
   web.www.post('/webhook', function (req, res) {
-    var data = req.body;
+    let data = req.body;
 
     // Make sure this is a page subscription
     if (data.object == 'page') {
       // Iterate over each entry
       // There may be multiple if batched
       data.entry.forEach(function(pageEntry) {
-        var pageID = pageEntry.id;
-        var timeOfEvent = pageEntry.time;
+        //let pageID = pageEntry.id;
+        //let timeOfEvent = pageEntry.time;
 
         // Iterate over each messaging event
         pageEntry.messaging.forEach(messagingEvent => {
@@ -278,12 +278,13 @@ export function init(app, web, msger, plugins) {
           });
 
           if (handled_count == 0) {
+            logger.info(`Webhook received unknown to handle messagingEvent: ${JSON.stringify(messagingEvent)}`);
             if (messagingEvent.message && messagingEvent.sender && messagingEvent.sender.id) {
               witai.tryToGuessIntent(messagingEvent.message)
                 .then(
                   // yes we have an intent, serve it
                   (intents) => {
-                    console.log('wit gives us: ', intents);
+                    logger.info(`wit gives us: ${JSON.stringify(intents)}`);
                     let handle_count = 0;
                     plugins.forEach(plugin => {
                       if (plugin.handleIntent(intents, messagingEvent, app, web, msger)) {
@@ -292,15 +293,16 @@ export function init(app, web, msger, plugins) {
                     });
                     if (handle_count == 0) {
                       return Promise.reject('we can not handle intents:' + JSON.stringify(intents));
+                    } else {
+                      logger.info(`and we handled it by wit.ai with intents: ${JSON.stringify(intents)}`);
                     }
                   }
                 )
                 .catch((reason) => {
-                  console.log('intent handling error', reason);
+                  logger.info(`intent handling error ${reason}`);
                   sendQuickSelect(messagingEvent.sender.id);
                 });
             }
-            console.log("Webhook received unknown to handle messagingEvent: ", messagingEvent);
           }
         });
       });
@@ -318,5 +320,4 @@ export function init(app, web, msger, plugins) {
   // Start all reapers
   msger.reaper();
   msger.session.reaper();
-
 }

@@ -25,7 +25,7 @@ ${bootstrap_cdn}
 
   www.get('/oncall_send', function(req, res) {
     if (app.oncall) {
-      msger.sendTextMessage(app.oncall, "Someone wants you! He said: " + req.query.msg);
+      msger.sendTextMessage(app.oncall, 'Someone wants you! He said: ' + req.query.msg);
       msger.sendOncallReplyMessage(app.oncall, req.query.recipient);
     }
     res.status(200).send(`
@@ -46,7 +46,6 @@ ${bootstrap_cdn}
 
   www.get('/oncall_reply', function(req, res) {
     let recipient = req.query.recipient;
-    console.log('recipient', recipient);
     if (recipient) {
       msger.sendTextMessage(recipient, 'From Oncall: ' + req.query.msg);
     }
@@ -85,4 +84,4 @@ ${bootstrap_cdn}
     `);
   });
 
-};
+}

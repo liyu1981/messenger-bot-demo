@@ -1,27 +1,24 @@
-require('babel-register')({ presets: [ 'es2015' ]});
-
-const
-  app = require('./bot/app.js'),
-  web = require('./bot/web.js'),
-  msger = require('./bot/msger.js')
-  ;
+import app from './bot/app';
+import * as web from './bot/web';
+import * as msger from './bot/msger';
+import logger from './bot/log';
 
 web.init(app, web, msger, [
-  require('./bot/example/web.js'),
-  require('./bot/oncall/web.js'),
-  require('./bot/conversation/web.js'),
+  require('./bot/example/web'),
+  require('./bot/oncall/web'),
+  require('./bot/conversation/web'),
 ]);
 
 msger.init(app, web, msger, [
-  require('./bot/example/msger.js'),
-  require('./bot/oncall/msger.js'),
-  require('./bot/order/msger.js'),
-  require('./bot/conversation/msger.js'),
+  require('./bot/example/msger'),
+  require('./bot/oncall/msger'),
+  require('./bot/order/msger'),
+  require('./bot/conversation/msger'),
 ]);
 
 // Start server
 // Webhooks must be available via SSL with a certificate signed by a valid
-// certificate authority.
-web.www.listen(web.www.get('port'), function() {
-  console.log('Messenger bot app is running on port', web.www.get('port'));
+// certificate authority.,
+web.www.listen(web.www.get('port'), () => {
+  logger.info(`Messenger bot app is running on port ${web.www.get('port')}`);
 });

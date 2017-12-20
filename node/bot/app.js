@@ -1,6 +1,5 @@
-const
-  config = require('config')
-  ;
+import config from 'config';
+import logger from './log';
 
 var app = {};
 
@@ -20,8 +19,8 @@ app.PAGE_ACCESS_TOKEN = (process.env.MESSENGER_PAGE_ACCESS_TOKEN) ?
   config.get('pageAccessToken');
 
 if (!(app.APP_SECRET && app.VALIDATION_TOKEN && app.PAGE_ACCESS_TOKEN)) {
-  console.error("Missing config values");
+  logger.error('Missing config values');
   process.exit(1);
 }
 
-module.exports = app;
+export default app;

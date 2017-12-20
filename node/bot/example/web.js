@@ -1,9 +1,7 @@
-const
-  request = require('request'),
-  example_msger = require('./msger.js')
-  ;
+import request from 'request';
+import * as example_msger from './msger';
 
-export function init(www, app) {
+export function init(www, _app) {
 
   www.get('/source', function(req, res) {
     var fn = example_msger.findSource(req.query['fname']);
@@ -17,8 +15,8 @@ export function init(www, app) {
         }
       }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-          res.status(200).send(body +
-  `<pre><code>
+          res.status(200).send(`${body}
+  <pre><code>
   callSendAPI send HTTP POST request with following setting
   {
   uri: 'https://graph.facebook.com/v2.6/me/messages',
@@ -26,8 +24,7 @@ export function init(www, app) {
   method: 'POST',
   json: messageData
   }
-  </code></pre>`
-          );
+  </code></pre>`);
         }
       });
     } else {

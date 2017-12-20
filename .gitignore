@@ -6,6 +6,6 @@ node_modules
 *.dat
 *.out
 
-node/config/default.json
-node/bundle/*
-node/var/*
+config/default.json
+bundle/*
+var/*
